@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chord Trainer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 90%;
+            margin: 20px 0;
+        }
+        h1 { margin-top: 0; color: #9c27b0; font-size: 1.5rem; } /* Purple Header */
+        
+        /* Display Box */
+        .display-box {
+            background: #000;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: border-color 0.2s;
+        }
+        .display-box.clickable { cursor: pointer; border-color: #9c27b0; }
+        .display-box.clickable:active { background-color: #111; }
+
+        .chord-symbol { font-size: 3.5rem; font-weight: bold; color: #ffeb3b; line-height: 1.1;}
+        .chord-name { font-size: 1.2rem; color: #ce93d8; margin-top: 5px; font-weight: normal;}
+        .sub-text { font-size: 1rem; color: #aaa; margin-bottom: 5px; }
+        .tap-hint { font-size: 0.8rem; color: #555; margin-top: 15px; display: none; }
+
+        /* Controls */
+        .controls {
+            display: grid;
+            gap: 15px;
+            text-align: left;
+            margin-bottom: 20px;
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        label { font-size: 0.9rem; color: #ddd; display: block; margin-bottom: 5px;}
+        select, input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            box-sizing: border-box; 
+        }
+
+        /* Checkbox Grid */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        .cb-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            background: #444;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .cb-item input { margin-right: 10px; width: auto; transform: scale(1.2); }
+
+        /* Buttons */
+        .btn-group { display: flex; gap: 10px; }
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+        }
+        .btn-start { background-color: #9c27b0; } /* Purple start */
+        .btn-start:hover { background-color: #7b1fa2; }
+        
+        .btn-pause { background-color: #ff9800; display: none; }
+        .btn-resume { background-color: #2196F3; display: none; }
+        .btn-next { background-color: #2196F3; display: none; }
+        .btn-stop { background-color: #f44336; display: none; }
+
+        @media (max-width: 600px) {
+            .chord-symbol { font-size: 2.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔮 Chord Randomizer</h1>
+    
+    <div class="controls" id="settingsPanel">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <label>Mode</label>
+                <select id="mode" onchange="toggleTimerVisibility()">
+                    <option value="timer">Timer</option>
+                    <option value="manual">Manual</option>
+                </select>
+            </div>
+            <div id="timerContainer">
+                <label>Seconds</label>
+                <input type="number" id="timer" value="6" min="2" max="120">
+            </div>
+        </div>
+
+        <div>
+            <label>Chord Complexity Pool:</label>
+            <div class="checkbox-group">
+                <div class="cb-item">
+                    <input type="checkbox" id="basic" checked>
+                    <label for="basic">Basic (Major, Minor)</label>
+                </div>
+                <div class="cb-item">
+                    <input type="checkbox" id="sevenths" checked>
+                    <label for="sevenths">Intermediate (7, m7, maj7, sus)</label>
+                </div>
+                <div class="cb-item">
+                    <input type="checkbox" id="advanced">
+                    <label for="advanced">Advanced (9, dim, aug, m7b5)</label>
+                </div>
+                <div class="cb-item">
+                    <input type="checkbox" id="jazz">
+                    <label for="jazz">Jazz / Expert (11, 13, 7#9, 7b9)</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="cb-item" style="margin-top: 5px; background: #555; font-weight: bold;">
+            <input type="checkbox" id="slash">
+            <label for="slash">Include Slash Chords (e.g., C/G)</label>
+        </div>
+    </div>
+
+    <div class="display-box" id="displayArea" style="opacity: 0.5;" onclick="handleBoxClick()">
+        <div class="sub-text">PLAY THIS</div>
+        <div class="chord-symbol" id="symbolDisplay">READY?</div>
+        <div class="chord-name" id="nameDisplay">---</div>
+        <div class="tap-hint" id="tapHint">(Tap box for next)</div>
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="startDrill()">Start Session</button>
+    
+    <div class="btn-group">
+        <button class="btn-pause" id="pauseBtn" onclick="pauseDrill()">Pause</button>
+        <button class="btn-resume" id="resumeBtn" onclick="resumeDrill()">Resume</button>
+        <button class="btn-next" id="nextBtn" onclick="generate()">Next Chord</button>
+        <button class="btn-stop" id="stopBtn" onclick="stopDrill()">Stop</button>
+    </div>
+</div>
+
+<script>
+    // --- DATA ---
+    const ROOTS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+    
+    // Each object has a 'label' (for the big text) and 'name' (for the subtitle)
+    const CHORD_DATA = {
+        basic: [
+            { sym: '', name: 'Major' },
+            { sym: 'm', name: 'Minor' }
+        ],
+        sevenths: [
+            { sym: '7', name: 'Dominant 7' },
+            { sym: 'maj7', name: 'Major 7' },
+            { sym: 'm7', name: 'Minor 7' },
+            { sym: 'sus4', name: 'Suspended 4' },
+            { sym: 'sus2', name: 'Suspended 2' }
+        ],
+        advanced: [
+            { sym: 'add9', name: 'Add 9' },
+            { sym: '9', name: 'Dominant 9' },
+            { sym: 'maj9', name: 'Major 9' },
+            { sym: 'm9', name: 'Minor 9' },
+            { sym: 'dim', name: 'Diminished' },
+            { sym: 'aug', name: 'Augmented' },
+            { sym: 'm7b5', name: 'Half-Diminished' }
+        ],
+        jazz: [
+            { sym: '11', name: 'Dominant 11' },
+            { sym: '13', name: 'Dominant 13' },
+            { sym: '6/9', name: '6/9' },
+            { sym: '7#9', name: '7 Sharp 9 (Hendrix)' },
+            { sym: '7b9', name: '7 Flat 9' },
+            { sym: 'm11', name: 'Minor 11' }
+        ]
+    };
+
+    let intervalId = null;
+    let isRunning = false;
+    let currentMode = 'timer';
+
+    function toggleTimerVisibility() {
+        const mode = document.getElementById('mode').value;
+        document.getElementById('timerContainer').style.display = (mode === 'manual') ? 'none' : 'block';
+    }
+
+    function getRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function getPool() {
+        let pool = [];
+        if(document.getElementById('basic').checked) pool = pool.concat(CHORD_DATA.basic);
+        if(document.getElementById('sevenths').checked) pool = pool.concat(CHORD_DATA.sevenths);
+        if(document.getElementById('advanced').checked) pool = pool.concat(CHORD_DATA.advanced);
+        if(document.getElementById('jazz').checked) pool = pool.concat(CHORD_DATA.jazz);
+        return pool;
+    }
+
+    function generate() {
+        const pool = getPool();
+        if(pool.length === 0) {
+            alert("Please select at least one chord type!");
+            document.getElementById('basic').checked = true;
+            return;
+        }
+
+        const root = getRandom(ROOTS);
+        const quality = getRandom(pool);
+        
+        let displaySymbol = root + quality.sym;
+        let displayName = root + " " + quality.name;
+
+        // Logic for Slash Chords
+        // 30% chance to add a slash bass note if the box is checked
+        if (document.getElementById('slash').checked && Math.random() < 0.3) {
+            const bass = getRandom(ROOTS);
+            // Don't let the bass be the same as the root (e.g., C/C)
+            if (bass !== root) {
+                displaySymbol += ` / ${bass}`;
+                displayName += ` with ${bass} Bass`;
+            }
+        }
+
+        // Update UI
+        document.getElementById('symbolDisplay').innerText = displaySymbol;
+        document.getElementById('nameDisplay').innerText = displayName;
+    }
+
+    function handleBoxClick() {
+        if (isRunning && currentMode === 'manual') generate();
+    }
+
+    function startDrill() {
+        if(getPool().length === 0) {
+            alert("Select a chord difficulty!");
+            return;
+        }
+
+        currentMode = document.getElementById('mode').value;
+        const seconds = document.getElementById('timer').value;
+        
+        isRunning = true;
+        document.getElementById('settingsPanel').style.display = 'none';
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'block';
+        document.getElementById('displayArea').style.opacity = '1';
+
+        generate();
+
+        if (currentMode === 'timer') {
+            document.getElementById('pauseBtn').style.display = 'block';
+            intervalId = setInterval(generate, seconds * 1000);
+            document.getElementById('displayArea').classList.remove('clickable');
+            document.getElementById('tapHint').style.display = 'none';
+        } else {
+            document.getElementById('nextBtn').style.display = 'block';
+            document.getElementById('displayArea').classList.add('clickable');
+            document.getElementById('tapHint').style.display = 'block';
+        }
+    }
+
+    function pauseDrill() {
+        clearInterval(intervalId);
+        document.getElementById('pauseBtn').style.display = 'none';
+        document.getElementById('resumeBtn').style.display = 'block';
+        document.getElementById('displayArea').style.opacity = '0.8';
+    }
+
+    function resumeDrill() {
+        const seconds = document.getElementById('timer').value;
+        document.getElementById('resumeBtn').style.display = 'none';
+        document.getElementById('pauseBtn').style.display = 'block';
+        document.getElementById('displayArea').style.opacity = '1';
+        intervalId = setInterval(generate, seconds * 1000);
+    }
+
+    function stopDrill() {
+        clearInterval(intervalId);
+        isRunning = false;
+        
+        document.getElementById('startBtn').style.display = 'block';
+        document.getElementById('pauseBtn').style.display = 'none';
+        document.getElementById('resumeBtn').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'none';
+        
+        document.getElementById('settingsPanel').style.display = 'grid';
+        document.getElementById('displayArea').style.opacity = '0.5';
+        document.getElementById('displayArea').classList.remove('clickable');
+        document.getElementById('tapHint').style.display = 'none';
+        
+        document.getElementById('symbolDisplay').innerText = "READY?";
+        document.getElementById('nameDisplay').innerText = "---";
+    }
+</script>
+
+</body>
+</html>
