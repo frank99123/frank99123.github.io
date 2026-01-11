@@ -45,7 +45,7 @@
         .display-box.clickable:active { background-color: #111; }
 
         .key-text { font-size: 3rem; font-weight: bold; color: #ffeb3b; }
-        .pos-text { font-size: 2rem; color: #2196F3; margin: 10px 0; font-weight: bold; }
+        .box-text { font-size: 2rem; color: #2196F3; margin: 10px 0; font-weight: bold; }
         .sub-text { font-size: 1rem; color: #aaa; }
         .tap-hint { font-size: 0.8rem; color: #555; margin-top: 10px; display: none; }
 
@@ -91,7 +91,7 @@
 
         @media (max-width: 600px) {
             .key-text { font-size: 2.5rem; }
-            .pos-text { font-size: 1.5rem; }
+            .box-text { font-size: 1.5rem; }
         }
     </style>
 </head>
@@ -128,14 +128,14 @@
         <div>
             <label>Drill Scope</label>
             <select id="scope">
-                <option value="random">Random Position (1-5)</option>
+                <option value="random">Random Box (1-5)</option>
                 <option value="full">Full Neck (Connect All)</option>
                 <option disabled>--- Focus Specific ---</option>
-                <option value="Pos 1">Position 1 Only</option>
-                <option value="Pos 2">Position 2 Only</option>
-                <option value="Pos 3">Position 3 Only</option>
-                <option value="Pos 4">Position 4 Only</option>
-                <option value="Pos 5">Position 5 Only</option>
+                <option value="Box 1">Box 1 Only</option>
+                <option value="Box 2">Box 2 Only</option>
+                <option value="Box 3">Box 3 Only</option>
+                <option value="Box 4">Box 4 Only</option>
+                <option value="Box 5">Box 5 Only</option>
             </select>
         </div>
     </div>
@@ -143,7 +143,7 @@
     <div class="display-box" id="displayArea" style="opacity: 0.5;" onclick="handleBoxClick()">
         <div class="sub-text">KEY</div>
         <div class="key-text" id="keyDisplay">READY?</div>
-        <div class="pos-text" id="posDisplay">---</div>
+        <div class="box-text" id="boxDisplay">---</div>
         <div class="tap-hint" id="tapHint">(Tap to advance)</div>
     </div>
 
@@ -159,7 +159,7 @@
 
 <script>
     const ROOTS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
-    const POSITIONS = ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'];
+    const BOXES = ['Box 1', 'Box 2', 'Box 3', 'Box 4', 'Box 5'];
 
     let intervalId = null;
     let isRunning = false;
@@ -185,23 +185,22 @@
             quality = getRandom(['Minor Pentatonic', 'Major Pentatonic']);
         }
 
-        // 3. Get Scope/Position
+        // 3. Get Scope/Box
         const scopeVal = document.getElementById('scope').value;
-        let positionText = "";
+        let boxText = "";
 
         if (scopeVal === 'full') {
-            positionText = "FULL NECK";
+            boxText = "FULL NECK";
         } else if (scopeVal === 'random') {
-            positionText = getRandom(POSITIONS);
+            boxText = getRandom(BOXES);
         } else {
-            // User selected specific position (e.g. "Pos 1")
-            // We convert "Pos 1" to "Position 1" for display
-            positionText = scopeVal.replace("Pos", "Position");
+            // User selected specific box (e.g. "Box 1")
+            boxText = scopeVal;
         }
 
         // Update UI
         document.getElementById('keyDisplay').innerText = `${root} ${quality}`;
-        document.getElementById('posDisplay').innerText = positionText;
+        document.getElementById('boxDisplay').innerText = boxText;
     }
 
     function handleBoxClick() {
@@ -263,7 +262,7 @@
         document.getElementById('tapHint').style.display = 'none';
         
         document.getElementById('keyDisplay').innerText = "READY?";
-        document.getElementById('posDisplay').innerText = "---";
+        document.getElementById('boxDisplay').innerText = "---";
     }
 </script>
 
