@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pentatonic Trainer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 90%;
+            margin: 20px 0;
+        }
+        h1 { margin-top: 0; color: #2196F3; font-size: 1.5rem; } /* Blue header for distinction */
+        
+        /* Display Box */
+        .display-box {
+            background: #000;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: border-color 0.2s;
+        }
+        .display-box.clickable { cursor: pointer; border-color: #2196F3; }
+        .display-box.clickable:active { background-color: #111; }
+
+        .key-text { font-size: 3rem; font-weight: bold; color: #ffeb3b; }
+        .pos-text { font-size: 2rem; color: #2196F3; margin: 10px 0; font-weight: bold; }
+        .sub-text { font-size: 1rem; color: #aaa; }
+        .tap-hint { font-size: 0.8rem; color: #555; margin-top: 10px; display: none; }
+
+        /* Controls */
+        .controls {
+            display: grid;
+            gap: 15px;
+            text-align: left;
+            margin-bottom: 20px;
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        label { font-size: 0.9rem; color: #ddd; display: block; margin-bottom: 5px;}
+        select, input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            box-sizing: border-box; 
+        }
+
+        /* Buttons */
+        .btn-group { display: flex; gap: 10px; }
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+        }
+        .btn-start { background-color: #2196F3; } /* Blue start button */
+        .btn-start:hover { background-color: #1976D2; }
+        
+        .btn-pause { background-color: #ff9800; display: none; }
+        .btn-resume { background-color: #4CAF50; display: none; }
+        .btn-next { background-color: #4CAF50; display: none; }
+        .btn-stop { background-color: #f44336; display: none; }
+
+        @media (max-width: 600px) {
+            .key-text { font-size: 2.5rem; }
+            .pos-text { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔥 Pentatonic Trainer</h1>
+    
+    <div class="controls" id="settingsPanel">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <label>Mode</label>
+                <select id="mode" onchange="toggleTimerVisibility()">
+                    <option value="timer">Timer</option>
+                    <option value="manual">Manual</option>
+                </select>
+            </div>
+            <div id="timerContainer">
+                <label>Seconds</label>
+                <input type="number" id="timer" value="8" min="2" max="120">
+            </div>
+        </div>
+
+        <div>
+            <label>Scale Quality</label>
+            <select id="quality">
+                <option value="Minor Pentatonic" selected>Minor Pentatonic</option>
+                <option value="Major Pentatonic">Major Pentatonic</option>
+                <option value="Both">Both</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Drill Scope</label>
+            <select id="scope">
+                <option value="random">Random Position (1-5)</option>
+                <option value="full">Full Neck (Connect All)</option>
+                <option disabled>--- Focus Specific ---</option>
+                <option value="Pos 1">Position 1 Only</option>
+                <option value="Pos 2">Position 2 Only</option>
+                <option value="Pos 3">Position 3 Only</option>
+                <option value="Pos 4">Position 4 Only</option>
+                <option value="Pos 5">Position 5 Only</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="display-box" id="displayArea" style="opacity: 0.5;" onclick="handleBoxClick()">
+        <div class="sub-text">KEY</div>
+        <div class="key-text" id="keyDisplay">READY?</div>
+        <div class="pos-text" id="posDisplay">---</div>
+        <div class="tap-hint" id="tapHint">(Tap to advance)</div>
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="startDrill()">Start Practice</button>
+    
+    <div class="btn-group">
+        <button class="btn-pause" id="pauseBtn" onclick="pauseDrill()">Pause</button>
+        <button class="btn-resume" id="resumeBtn" onclick="resumeDrill()">Resume</button>
+        <button class="btn-next" id="nextBtn" onclick="generate()">Next Scale</button>
+        <button class="btn-stop" id="stopBtn" onclick="stopDrill()">Stop</button>
+    </div>
+</div>
+
+<script>
+    const ROOTS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+    const POSITIONS = ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'];
+
+    let intervalId = null;
+    let isRunning = false;
+    let currentMode = 'timer';
+
+    function toggleTimerVisibility() {
+        const mode = document.getElementById('mode').value;
+        document.getElementById('timerContainer').style.display = (mode === 'manual') ? 'none' : 'block';
+    }
+
+    function getRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function generate() {
+        // 1. Get Root
+        const root = getRandom(ROOTS);
+
+        // 2. Get Quality
+        const qualVal = document.getElementById('quality').value;
+        let quality = qualVal;
+        if (qualVal === 'Both') {
+            quality = getRandom(['Minor Pentatonic', 'Major Pentatonic']);
+        }
+
+        // 3. Get Scope/Position
+        const scopeVal = document.getElementById('scope').value;
+        let positionText = "";
+
+        if (scopeVal === 'full') {
+            positionText = "FULL NECK";
+        } else if (scopeVal === 'random') {
+            positionText = getRandom(POSITIONS);
+        } else {
+            // User selected specific position (e.g. "Pos 1")
+            // We convert "Pos 1" to "Position 1" for display
+            positionText = scopeVal.replace("Pos", "Position");
+        }
+
+        // Update UI
+        document.getElementById('keyDisplay').innerText = `${root} ${quality}`;
+        document.getElementById('posDisplay').innerText = positionText;
+    }
+
+    function handleBoxClick() {
+        if (isRunning && currentMode === 'manual') generate();
+    }
+
+    function startDrill() {
+        currentMode = document.getElementById('mode').value;
+        const seconds = document.getElementById('timer').value;
+        
+        isRunning = true;
+        document.getElementById('settingsPanel').style.display = 'none';
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'block';
+        document.getElementById('displayArea').style.opacity = '1';
+
+        generate();
+
+        if (currentMode === 'timer') {
+            document.getElementById('pauseBtn').style.display = 'block';
+            intervalId = setInterval(generate, seconds * 1000);
+            document.getElementById('displayArea').classList.remove('clickable');
+            document.getElementById('tapHint').style.display = 'none';
+        } else {
+            document.getElementById('nextBtn').style.display = 'block';
+            document.getElementById('displayArea').classList.add('clickable');
+            document.getElementById('tapHint').style.display = 'block';
+        }
+    }
+
+    function pauseDrill() {
+        clearInterval(intervalId);
+        document.getElementById('pauseBtn').style.display = 'none';
+        document.getElementById('resumeBtn').style.display = 'block';
+        document.getElementById('displayArea').style.opacity = '0.8';
+    }
+
+    function resumeDrill() {
+        const seconds = document.getElementById('timer').value;
+        document.getElementById('resumeBtn').style.display = 'none';
+        document.getElementById('pauseBtn').style.display = 'block';
+        document.getElementById('displayArea').style.opacity = '1';
+        intervalId = setInterval(generate, seconds * 1000);
+    }
+
+    function stopDrill() {
+        clearInterval(intervalId);
+        isRunning = false;
+        
+        document.getElementById('startBtn').style.display = 'block';
+        document.getElementById('pauseBtn').style.display = 'none';
+        document.getElementById('resumeBtn').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'none';
+        
+        document.getElementById('settingsPanel').style.display = 'grid';
+        document.getElementById('displayArea').style.opacity = '0.5';
+        document.getElementById('displayArea').classList.remove('clickable');
+        document.getElementById('tapHint').style.display = 'none';
+        
+        document.getElementById('keyDisplay').innerText = "READY?";
+        document.getElementById('posDisplay').innerText = "---";
+    }
+</script>
+
+</body>
+</html>
