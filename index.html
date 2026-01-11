@@ -112,9 +112,9 @@
 <body>
 
 <div class="container">
-    <a href="pentatonic.html">Pentatonic Trainer</a>
+    <a href="pentatonic.html" id="pentLink">Pentatonic Trainer</a>
     <br>
-    <a href="chord.html">Chord Trainer</a>
+    <a href="chord.html" id="chordLink">Chord Trainer</a>
     <h1>🎸 Triad Trainer Custom</h1>
     
     <div class="controls" id="settingsPanel">
@@ -269,6 +269,8 @@
         document.getElementById('startBtn').style.display = 'none';
         document.getElementById('stopBtn').style.display = 'block';
         document.getElementById('displayArea').style.opacity = '1';
+        document.getElementById('pentLink').style.display = 'none';
+        document.getElementById('chordLink').style.display = 'none';
 
         generate();
 
@@ -313,7 +315,8 @@
         document.getElementById('displayArea').style.opacity = '0.5';
         document.getElementById('displayArea').classList.remove('clickable');
         document.getElementById('tapHint').style.display = 'none';
-        
+        document.getElementById('pentLink').style.display = 'inline';
+        document.getElementById('chordLink').style.display = 'inline';
         document.getElementById('chordDisplay').innerText = "PAUSED";
         document.getElementById('stringDisplay').innerText = "---";
         document.getElementById('shapeDisplay').innerText = "---";

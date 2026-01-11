@@ -98,9 +98,9 @@
 <body>
 
 <div class="container">
-    <a href="index.html">Triad Trainer</a>
+    <a href="index.html" id="triadLink">Triad Trainer</a>
     <br>
-    <a href="chord.html">Chord Trainer</a>
+    <a href="chord.html" id="chordLink">Chord Trainer</a>
     <h1>🔥 Pentatonic Trainer</h1>
     
     <div class="controls" id="settingsPanel">
@@ -218,6 +218,8 @@
         document.getElementById('startBtn').style.display = 'none';
         document.getElementById('stopBtn').style.display = 'block';
         document.getElementById('displayArea').style.opacity = '1';
+        document.getElementById('triadLink').style.display = 'none';
+        document.getElementById('chordLink').style.display = 'none';
 
         generate();
 
@@ -265,6 +267,8 @@
         
         document.getElementById('keyDisplay').innerText = "READY?";
         document.getElementById('boxDisplay').innerText = "---";
+        document.getElementById('triadLink').style.display = 'inline';
+        document.getElementById('chordLink').style.display = 'inline';
     }
 </script>
 
