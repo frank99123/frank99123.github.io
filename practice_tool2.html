@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triad Trainer Custom</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 90%;
+            margin: 20px 0;
+        }
+        h1 { margin-top: 0; color: #4CAF50; font-size: 1.5rem; }
+        
+        /* Display Box */
+        .display-box {
+            background: #000;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: border-color 0.2s;
+        }
+        .display-box.clickable { cursor: pointer; border-color: #4CAF50; }
+        .display-box.clickable:active { background-color: #111; }
+
+        .target-note { font-size: 3rem; font-weight: bold; color: #ffeb3b; }
+        .sub-text { font-size: 1.2rem; color: #aaa; margin: 5px 0; }
+        .highlight { color: #4CAF50; font-weight: bold; }
+        .tap-hint { font-size: 0.8rem; color: #555; margin-top: 10px; display: none; }
+
+        /* Controls */
+        .controls {
+            display: grid;
+            gap: 15px;
+            text-align: left;
+            margin-bottom: 20px;
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        label { font-size: 0.9rem; color: #ddd; display: block; margin-bottom: 5px;}
+        select, input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            box-sizing: border-box; 
+        }
+
+        /* Checkbox Grid */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .cb-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+            background: #444;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .cb-item input { margin-right: 8px; width: auto; }
+
+        /* Buttons */
+        .btn-group { display: flex; gap: 10px; }
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+        }
+        .btn-start { background-color: #4CAF50; }
+        .btn-pause { background-color: #ff9800; display: none; }
+        .btn-resume { background-color: #2196F3; display: none; }
+        .btn-next { background-color: #2196F3; display: none; }
+        .btn-stop { background-color: #f44336; display: none; }
+
+        @media (max-width: 600px) {
+            .target-note { font-size: 2.5rem; }
+            .checkbox-group { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎸 Triad Trainer Custom</h1>
+    
+    <div class="controls" id="settingsPanel">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <label>Mode</label>
+                <select id="mode" onchange="toggleTimerVisibility()">
+                    <option value="timer">Timer</option>
+                    <option value="manual">Manual</option>
+                </select>
+            </div>
+            <div id="timerContainer">
+                <label>Seconds</label>
+                <input type="number" id="timer" value="5" min="2" max="60">
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <label>Inversions</label>
+                <select id="difficulty">
+                    <option value="1">Root Only</option>
+                    <option value="2" selected>Root + 1st</option>
+                    <option value="3">All Inversions</option>
+                </select>
+            </div>
+            <div>
+                <label>Quality</label>
+                <select id="quality">
+                    <option value="Major">Major</option>
+                    <option value="Minor">Minor</option>
+                    <option value="Both">Both</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label>Active String Sets (Low to High):</label>
+            <div class="checkbox-group">
+                <div class="cb-item">
+                    <input type="checkbox" id="str456" value="4-5-6 (D, A, Low E)" checked>
+                    <label for="str456" style="margin:0">4-5-6 (Low Strings)</label>
+                </div>
+                <div class="cb-item">
+                    <input type="checkbox" id="str345" value="3-4-5 (G, D, A)" checked>
+                    <label for="str345" style="margin:0">3-4-5 (Mid-Low)</label>
+                </div>
+                <div class="cb-item">
+                    <input type="checkbox" id="str234" value="2-3-4 (B, G, D)" checked>
+                    <label for="str234" style="margin:0">2-3-4 (Mid-High)</label>
+                </div>
+                <div class="cb-item">
+                    <input type="checkbox" id="str123" value="1-2-3 (High E, B, G)" checked>
+                    <label for="str123" style="margin:0">1-2-3 (Top Strings)</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="display-box" id="displayArea" style="opacity: 0.5;" onclick="handleBoxClick()">
+        <div class="target-note" id="chordDisplay">READY?</div>
+        <div class="sub-text" id="stringDisplay">---</div>
+        <div class="sub-text" id="shapeDisplay">---</div>
+        <div class="tap-hint" id="tapHint">(Tap box for next)</div>
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="startDrill()">Start Practice</button>
+    
+    <div class="btn-group">
+        <button class="btn-pause" id="pauseBtn" onclick="pauseDrill()">Pause</button>
+        <button class="btn-resume" id="resumeBtn" onclick="resumeDrill()">Resume</button>
+        <button class="btn-next" id="nextBtn" onclick="generate()">Next Chord</button>
+        <button class="btn-stop" id="stopBtn" onclick="stopDrill()">Stop</button>
+    </div>
+</div>
+
+<script>
+    const ROOTS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+    
+    const INVERSION_LEVELS = {
+        '1': ['Root Position'],
+        '2': ['Root Position', '1st Inversion'],
+        '3': ['Root Position', '1st Inversion', '2nd Inversion']
+    };
+
+    let intervalId = null;
+    let isRunning = false;
+    let currentMode = 'timer';
+
+    function toggleTimerVisibility() {
+        const mode = document.getElementById('mode').value;
+        document.getElementById('timerContainer').style.display = (mode === 'manual') ? 'none' : 'block';
+    }
+
+    function getRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function getActiveStringSets() {
+        // We check ID's, so the order in the array depends on the order of push
+        // We can just check them in the new order so the randomness is consistent
+        const sets = [];
+        if(document.getElementById('str456').checked) sets.push(document.getElementById('str456').value);
+        if(document.getElementById('str345').checked) sets.push(document.getElementById('str345').value);
+        if(document.getElementById('str234').checked) sets.push(document.getElementById('str234').value);
+        if(document.getElementById('str123').checked) sets.push(document.getElementById('str123').value);
+        return sets;
+    }
+
+    function generate() {
+        // 1. Get Quality
+        const qualVal = document.getElementById('quality').value;
+        const quality = (qualVal === 'Both') ? getRandom(['Major', 'Minor']) : qualVal;
+
+        // 2. Get Inversions (based on difficulty)
+        const diffVal = document.getElementById('difficulty').value;
+        const invList = INVERSION_LEVELS[diffVal];
+        const inversion = getRandom(invList);
+
+        // 3. Get String Sets (based on checkboxes)
+        let stringList = getActiveStringSets();
+        if (stringList.length === 0) {
+            // Failsafe if user unchecks everything
+            stringList = ['4-5-6 (D, A, Low E)']; 
+            alert("Please select at least one string set! Defaulting to 4-5-6.");
+            document.getElementById('str456').checked = true;
+        }
+        const strings = getRandom(stringList);
+        const root = getRandom(ROOTS);
+
+        // Update UI
+        document.getElementById('chordDisplay').innerText = `${root} ${quality}`;
+        document.getElementById('stringDisplay').innerHTML = `Strings: <span class="highlight">${strings}</span>`;
+        document.getElementById('shapeDisplay').innerText = inversion;
+    }
+
+    function handleBoxClick() {
+        if (isRunning && currentMode === 'manual') generate();
+    }
+
+    function startDrill() {
+        currentMode = document.getElementById('mode').value;
+        const seconds = document.getElementById('timer').value;
+        
+        if (getActiveStringSets().length === 0) {
+            alert("You must check at least one String Set box!");
+            return;
+        }
+
+        isRunning = true;
+        document.getElementById('settingsPanel').style.display = 'none';
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'block';
+        document.getElementById('displayArea').style.opacity = '1';
+
+        generate();
+
+        if (currentMode === 'timer') {
+            document.getElementById('pauseBtn').style.display = 'block';
+            intervalId = setInterval(generate, seconds * 1000);
+            document.getElementById('displayArea').classList.remove('clickable');
+            document.getElementById('tapHint').style.display = 'none';
+        } else {
+            document.getElementById('nextBtn').style.display = 'block';
+            document.getElementById('displayArea').classList.add('clickable');
+            document.getElementById('tapHint').style.display = 'block';
+        }
+    }
+
+    function pauseDrill() {
+        clearInterval(intervalId);
+        document.getElementById('pauseBtn').style.display = 'none';
+        document.getElementById('resumeBtn').style.display = 'block';
+        document.getElementById('displayArea').style.opacity = '0.8';
+    }
+
+    function resumeDrill() {
+        const seconds = document.getElementById('timer').value;
+        document.getElementById('resumeBtn').style.display = 'none';
+        document.getElementById('pauseBtn').style.display = 'block';
+        document.getElementById('displayArea').style.opacity = '1';
+        intervalId = setInterval(generate, seconds * 1000);
+    }
+
+    function stopDrill() {
+        clearInterval(intervalId);
+        isRunning = false;
+        
+        document.getElementById('startBtn').style.display = 'block';
+        document.getElementById('pauseBtn').style.display = 'none';
+        document.getElementById('resumeBtn').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'none';
+        
+        document.getElementById('settingsPanel').style.display = 'grid';
+        document.getElementById('displayArea').style.opacity = '0.5';
+        document.getElementById('displayArea').classList.remove('clickable');
+        document.getElementById('tapHint').style.display = 'none';
+        
+        document.getElementById('chordDisplay').innerText = "PAUSED";
+        document.getElementById('stringDisplay').innerText = "---";
+        document.getElementById('shapeDisplay').innerText = "---";
+    }
+</script>
+
+</body>
+</html>
