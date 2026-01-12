@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pentatonic Trainer</title>
+    <title>Triad Trainer Custom</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -26,7 +26,7 @@
             width: 90%;
             margin: 20px 0;
         }
-        h1 { margin-top: 0; color: #2196F3; font-size: 1.5rem; } /* Blue header for distinction */
+        h1 { margin-top: 0; color: #4CAF50; font-size: 1.5rem; }
         
         /* Display Box */
         .display-box {
@@ -41,12 +41,12 @@
             justify-content: center;
             transition: border-color 0.2s;
         }
-        .display-box.clickable { cursor: pointer; border-color: #2196F3; }
+        .display-box.clickable { cursor: pointer; border-color: #4CAF50; }
         .display-box.clickable:active { background-color: #111; }
 
-        .key-text { font-size: 3rem; font-weight: bold; color: #ffeb3b; }
-        .box-text { font-size: 2rem; color: #2196F3; margin: 10px 0; font-weight: bold; }
-        .sub-text { font-size: 1rem; color: #aaa; }
+        .target-note { font-size: 3rem; font-weight: bold; color: #ffeb3b; }
+        .sub-text { font-size: 1.2rem; color: #aaa; margin: 5px 0; }
+        .highlight { color: #4CAF50; font-weight: bold; }
         .tap-hint { font-size: 0.8rem; color: #555; margin-top: 10px; display: none; }
 
         /* Controls */
@@ -70,6 +70,22 @@
             box-sizing: border-box; 
         }
 
+        /* Checkbox Grid */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .cb-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+            background: #444;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .cb-item input { margin-right: 8px; width: auto; }
+
         /* Buttons */
         .btn-group { display: flex; gap: 10px; }
         button {
@@ -81,17 +97,15 @@
             cursor: pointer;
             color: white;
         }
-        .btn-start { background-color: #2196F3; } /* Blue start button */
-        .btn-start:hover { background-color: #1976D2; }
-        
+        .btn-start { background-color: #4CAF50; }
         .btn-pause { background-color: #ff9800; display: none; }
-        .btn-resume { background-color: #4CAF50; display: none; }
-        .btn-next { background-color: #4CAF50; display: none; }
+        .btn-resume { background-color: #2196F3; display: none; }
+        .btn-next { background-color: #2196F3; display: none; }
         .btn-stop { background-color: #f44336; display: none; }
 
         @media (max-width: 600px) {
-            .key-text { font-size: 2.5rem; }
-            .box-text { font-size: 1.5rem; }
+            .target-note { font-size: 2.5rem; }
+            .checkbox-group { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -99,7 +113,7 @@
 
 <div class="container">
     <a href="index.html" id="idxLink">Index Page</a>
-    <h1>🔥 Pentatonic Trainer</h1>
+    <h1>🎸 Triad Trainer Custom</h1>
     
     <div class="controls" id="settingsPanel">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -112,39 +126,57 @@
             </div>
             <div id="timerContainer">
                 <label>Seconds</label>
-                <input type="number" id="timer" value="8" min="2" max="120">
+                <input type="number" id="timer" value="5" min="2" max="60">
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <label>Inversions</label>
+                <select id="difficulty">
+                    <option value="1">Root Only</option>
+                    <option value="2" selected>Root + 1st</option>
+                    <option value="3">All Inversions</option>
+                </select>
+            </div>
+            <div>
+                <label>Quality</label>
+                <select id="quality">
+                    <option value="Major">Major</option>
+                    <option value="Minor">Minor</option>
+                    <option value="Both">Both</option>
+                </select>
             </div>
         </div>
 
         <div>
-            <label>Scale Quality</label>
-            <select id="quality">
-                <option value="Minor Pentatonic" selected>Minor Pentatonic</option>
-                <option value="Major Pentatonic">Major Pentatonic</option>
-                <option value="Both">Both</option>
-            </select>
-        </div>
-
-        <div>
-            <label>Drill Scope</label>
-            <select id="scope">
-                <option value="random">Random Box (1-5)</option>
-                <option value="full">Full Neck (Connect All)</option>
-                <option disabled>--- Focus Specific ---</option>
-                <option value="Box 1">Box 1 Only</option>
-                <option value="Box 2">Box 2 Only</option>
-                <option value="Box 3">Box 3 Only</option>
-                <option value="Box 4">Box 4 Only</option>
-                <option value="Box 5">Box 5 Only</option>
-            </select>
+            <label>Active String Sets (Low to High):</label>
+            <div class="checkbox-group">
+                <div class="cb-item">
+                    <input type="checkbox" id="str456" value="4-5-6 (D, A, Low E)" checked>
+                    <label for="str456" style="margin:0">4-5-6 (Low Strings)</label>
+                </div>
+                <div class="cb-item">
+                    <input type="checkbox" id="str345" value="3-4-5 (G, D, A)" checked>
+                    <label for="str345" style="margin:0">3-4-5 (Mid-Low)</label>
+                </div>
+                <div class="cb-item">
+                    <input type="checkbox" id="str234" value="2-3-4 (B, G, D)" checked>
+                    <label for="str234" style="margin:0">2-3-4 (Mid-High)</label>
+                </div>
+                <div class="cb-item">
+                    <input type="checkbox" id="str123" value="1-2-3 (High E, B, G)" checked>
+                    <label for="str123" style="margin:0">1-2-3 (Top Strings)</label>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="display-box" id="displayArea" style="opacity: 0.5;" onclick="handleBoxClick()">
-        <div class="sub-text">KEY</div>
-        <div class="key-text" id="keyDisplay">READY?</div>
-        <div class="box-text" id="boxDisplay">---</div>
-        <div class="tap-hint" id="tapHint">(Tap to advance)</div>
+        <div class="target-note" id="chordDisplay">READY?</div>
+        <div class="sub-text" id="stringDisplay">---</div>
+        <div class="sub-text" id="shapeDisplay">---</div>
+        <div class="tap-hint" id="tapHint">(Tap box for next)</div>
     </div>
 
     <button class="btn-start" id="startBtn" onclick="startDrill()">Start Practice</button>
@@ -152,14 +184,19 @@
     <div class="btn-group">
         <button class="btn-pause" id="pauseBtn" onclick="pauseDrill()">Pause</button>
         <button class="btn-resume" id="resumeBtn" onclick="resumeDrill()">Resume</button>
-        <button class="btn-next" id="nextBtn" onclick="generate()">Next Scale</button>
+        <button class="btn-next" id="nextBtn" onclick="generate()">Next Chord</button>
         <button class="btn-stop" id="stopBtn" onclick="stopDrill()">Stop</button>
     </div>
 </div>
 
 <script>
     const ROOTS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
-    const BOXES = ['Box 1', 'Box 2', 'Box 3', 'Box 4', 'Box 5'];
+    
+    const INVERSION_LEVELS = {
+        '1': ['Root Position'],
+        '2': ['Root Position', '1st Inversion'],
+        '3': ['Root Position', '1st Inversion', '2nd Inversion']
+    };
 
     let intervalId = null;
     let isRunning = false;
@@ -174,33 +211,42 @@
         return arr[Math.floor(Math.random() * arr.length)];
     }
 
+    function getActiveStringSets() {
+        // We check ID's, so the order in the array depends on the order of push
+        // We can just check them in the new order so the randomness is consistent
+        const sets = [];
+        if(document.getElementById('str456').checked) sets.push(document.getElementById('str456').value);
+        if(document.getElementById('str345').checked) sets.push(document.getElementById('str345').value);
+        if(document.getElementById('str234').checked) sets.push(document.getElementById('str234').value);
+        if(document.getElementById('str123').checked) sets.push(document.getElementById('str123').value);
+        return sets;
+    }
+
     function generate() {
-        // 1. Get Root
+        // 1. Get Quality
+        const qualVal = document.getElementById('quality').value;
+        const quality = (qualVal === 'Both') ? getRandom(['Major', 'Minor']) : qualVal;
+
+        // 2. Get Inversions (based on difficulty)
+        const diffVal = document.getElementById('difficulty').value;
+        const invList = INVERSION_LEVELS[diffVal];
+        const inversion = getRandom(invList);
+
+        // 3. Get String Sets (based on checkboxes)
+        let stringList = getActiveStringSets();
+        if (stringList.length === 0) {
+            // Failsafe if user unchecks everything
+            stringList = ['4-5-6 (D, A, Low E)']; 
+            alert("Please select at least one string set! Defaulting to 4-5-6.");
+            document.getElementById('str456').checked = true;
+        }
+        const strings = getRandom(stringList);
         const root = getRandom(ROOTS);
 
-        // 2. Get Quality
-        const qualVal = document.getElementById('quality').value;
-        let quality = qualVal;
-        if (qualVal === 'Both') {
-            quality = getRandom(['Minor Pentatonic', 'Major Pentatonic']);
-        }
-
-        // 3. Get Scope/Box
-        const scopeVal = document.getElementById('scope').value;
-        let boxText = "";
-
-        if (scopeVal === 'full') {
-            boxText = "FULL NECK";
-        } else if (scopeVal === 'random') {
-            boxText = getRandom(BOXES);
-        } else {
-            // User selected specific box (e.g. "Box 1")
-            boxText = scopeVal;
-        }
-
         // Update UI
-        document.getElementById('keyDisplay').innerText = `${root} ${quality}`;
-        document.getElementById('boxDisplay').innerText = boxText;
+        document.getElementById('chordDisplay').innerText = `${root} ${quality}`;
+        document.getElementById('stringDisplay').innerHTML = `Strings: <span class="highlight">${strings}</span>`;
+        document.getElementById('shapeDisplay').innerText = inversion;
     }
 
     function handleBoxClick() {
@@ -211,14 +257,17 @@
         currentMode = document.getElementById('mode').value;
         const seconds = document.getElementById('timer').value;
         
+        if (getActiveStringSets().length === 0) {
+            alert("You must check at least one String Set box!");
+            return;
+        }
+
         isRunning = true;
         document.getElementById('settingsPanel').style.display = 'none';
         document.getElementById('startBtn').style.display = 'none';
         document.getElementById('stopBtn').style.display = 'block';
         document.getElementById('displayArea').style.opacity = '1';
         document.getElementById('idxLink').style.display = 'none';
-        const chord = document.getElementById('chordLink');
-        if (chord) chord.style.display = 'none';
 
         generate();
 
@@ -263,12 +312,10 @@
         document.getElementById('displayArea').style.opacity = '0.5';
         document.getElementById('displayArea').classList.remove('clickable');
         document.getElementById('tapHint').style.display = 'none';
-        
-        document.getElementById('keyDisplay').innerText = "READY?";
-        document.getElementById('boxDisplay').innerText = "---";
         document.getElementById('idxLink').style.display = 'inline';
-        const chord2 = document.getElementById('chordLink');
-        if (chord2) chord2.style.display = 'inline';
+        document.getElementById('chordDisplay').innerText = "PAUSED";
+        document.getElementById('stringDisplay').innerText = "---";
+        document.getElementById('shapeDisplay').innerText = "---";
     }
 </script>
 

@@ -113,9 +113,7 @@
 <body>
 
 <div class="container">
-    <a href="index.html" id="triadLink">Triad Trainer</a>
-    <br>
-    <a href="pentatonic.html" id="pentLink">Pentatonic Trainer</a>
+    <a href="index.html" id="idxLink">Index Page</a>
     <h1>🔮 Chord Randomizer</h1>
     
     <div class="controls" id="settingsPanel">
@@ -284,8 +282,9 @@
         document.getElementById('startBtn').style.display = 'none';
         document.getElementById('stopBtn').style.display = 'block';
         document.getElementById('displayArea').style.opacity = '1';
-        document.getElementById('triadLink').style.display = 'none';
-        document.getElementById('pentLink').style.display = 'none';
+        document.getElementById('idxLink').style.display = 'none';
+        const pent = document.getElementById('pentLink');
+        if (pent) pent.style.display = 'none';
 
         generate();
 
@@ -333,8 +332,9 @@
         
         document.getElementById('symbolDisplay').innerText = "READY?";
         document.getElementById('nameDisplay').innerText = "---";
-        document.getElementById('triadLink').style.display = 'inline';
-        document.getElementById('pentLink').style.display = 'inline';
+        document.getElementById('idxLink').style.display = 'inline';
+        const pent2 = document.getElementById('pentLink');
+        if (pent2) pent2.style.display = 'inline';
     }
 </script>
 
